@@ -1,4 +1,5 @@
-// Consider port to Solidity
+// Consider port to Solidity and 
+// going a level of abstraction higher
 
 using System;
 
