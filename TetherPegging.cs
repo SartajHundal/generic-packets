@@ -1,3 +1,5 @@
+// Consider port to Solidity
+
 using System;
 
 public class TetherPegging
