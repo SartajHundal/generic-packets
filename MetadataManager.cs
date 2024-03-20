@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.Azure.CognitiveServices.Language.TextAnalytics;
+using Microsoft.Azure.CognitiveServices.Language.TextAnalytics.Models;
 
 // Base class for metadata management
 public abstract class MetadataManager
@@ -24,10 +27,14 @@ public class Web3MetadataManager : MetadataManager
 public class ProtocolDetector
 {
     private List<MetadataManager> _metadataManagers;
+    private List<string> _detectedProtocols;
+    private readonly ITextAnalyticsClient _textAnalyticsClient;
 
-    public ProtocolDetector()
+    public ProtocolDetector(ITextAnalyticsClient textAnalyticsClient)
     {
         _metadataManagers = new List<MetadataManager>();
+        _detectedProtocols = new List<string>();
+        _textAnalyticsClient = textAnalyticsClient;
     }
 
     // Register a metadata manager for a specific protocol
@@ -37,35 +44,80 @@ public class ProtocolDetector
     }
 
     // Detect and process metadata for a given protocol
-    public void DetectAndProcessProtocol(string protocol, string metadata)
+    public async Task DetectAndProcessProtocol(string metadata)
     {
-        foreach (var manager in _metadataManagers)
+        var detectedProtocol = await DetectProtocolUsingMachineLearning(metadata);
+        if (!string.IsNullOrEmpty(detectedProtocol))
         {
-            if (manager.GetType().Name == $"{protocol}MetadataManager")
+            if (!_detectedProtocols.Contains(detectedProtocol))
             {
-                manager.ProcessMetadata(metadata);
-                return;
+                Console.WriteLine($"Detected new protocol: {detectedProtocol}");
+                _detectedProtocols.Add(detectedProtocol);
+                RegisterNewMetadataManager(detectedProtocol);
+            }
+
+            foreach (var manager in _metadataManagers)
+            {
+                if (manager.GetType().Name == $"{detectedProtocol}MetadataManager")
+                {
+                    manager.ProcessMetadata(metadata);
+                    return;
+                }
             }
         }
+        else
+        {
+            Console.WriteLine("No protocol detected for the given metadata.");
+        }
+    }
 
-        Console.WriteLine($"No metadata manager found for protocol: {protocol}");
+    // Register a new metadata manager based on the detected protocol
+    private void RegisterNewMetadataManager(string protocol)
+    {
+        switch (protocol)
+        {
+            case "Web3":
+                RegisterMetadataManager(new Web3MetadataManager());
+                break;
+            // Add cases for other protocols as needed
+            default:
+                Console.WriteLine($"No specific metadata manager implemented for protocol: {protocol}");
+                break;
+        }
+    }
+
+    // Use Azure Text Analytics to detect protocol from metadata using machine learning
+    private async Task<string> DetectProtocolUsingMachineLearning(string metadata)
+    {
+        var result = await _textAnalyticsClient.EntitiesAsync(false, new MultiLanguageBatchInput(
+            new List<MultiLanguageInput> { new MultiLanguageInput("en", "1", metadata) }));
+
+        if (result.Documents.Count > 0 && result.Documents[0].Entities.Count > 0)
+        {
+            // Assuming the detected entity with the highest confidence score is the protocol
+            return result.Documents[0].Entities[0].Name;
+        }
+
+        return null;
     }
 }
 
 // Example usage:
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
-        // Initialize the protocol detector
-        var protocolDetector = new ProtocolDetector();
+        // Initialize Azure Text Analytics client
+        var textAnalyticsClient = new TextAnalyticsClient(new ApiKeyServiceClientCredentials("YOUR_API_KEY"))
+        {
+            Endpoint = "YOUR_ENDPOINT"
+        };
 
-        // Register metadata managers for different protocols
-        protocolDetector.RegisterMetadataManager(new Web3MetadataManager());
-        // Add more metadata managers for other protocols as they emerge
+        // Initialize the protocol detector
+        var protocolDetector = new ProtocolDetector(textAnalyticsClient);
 
         // Simulate detecting and processing metadata for different protocols
-        protocolDetector.DetectAndProcessProtocol("Web3", "Web3.0 metadata...");
-        protocolDetector.DetectAndProcessProtocol("NewProtocol", "Metadata for a new protocol...");
+        await protocolDetector.DetectAndProcessProtocol("Web3.0 metadata...");
+        await protocolDetector.DetectAndProcessProtocol("Metadata for a new protocol...");
     }
 }
