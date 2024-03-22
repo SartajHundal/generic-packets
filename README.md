@@ -3,7 +3,7 @@
 Welcome to this Packet Processor project! It is a versatile software component designed to facilitate packet processing, transaction analysis, and secure data storage in Azure Blob Storage. This component plays a pivotal role within systems requiring transaction management and liquidity analysis. We are replicating a few known results from familiar names on GitHub - they got lost in my CRM, so please forgive me as the documentation undergoes improvements. :) These are long projects, and I do not get paid for this work (and no, this does not make it a hobby project).
 
 ## Papers
-
+- https://eprint.iacr.org/2021/537.pdf (The Innovation Piece from First Principles)
 - https://lillyclark.github.io/files/Blockchain_Satellite_Reputation.pdf
 
 ## Features
