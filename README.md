@@ -23,7 +23,7 @@ To begin using the Packet Processor, follow these steps:
 
 ## Contribution
 
-We welcome contributions from the community to enhance the functionality and usability of the Onion Packet Processor. If you have suggestions, bug reports, or feature requests, please feel free to open an issue or submit a pull request.
+We welcome contributions from the community to enhance the functionality and usability of the Packet Processor. If you have suggestions, bug reports, or feature requests, please feel free to open an issue or submit a pull request.
 
 ## License
 
