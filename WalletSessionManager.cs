@@ -8,35 +8,43 @@ public class WalletSessionManager
 
     public void SaveSession(WalletSession session)
     {
-        string json = JsonConvert.SerializeObject(session);
-        File.WriteAllText(SessionFileName, json);
+        try
+        {
+            string json = JsonConvert.SerializeObject(session);
+            File.WriteAllText(SessionFileName, json);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving session: {ex.Message}");
+        }
     }
 
     public WalletSession LoadSession()
     {
-        if (File.Exists(SessionFileName))
+        try
         {
-            string json = File.ReadAllText(SessionFileName);
-            return JsonConvert.DeserializeObject<WalletSession>(json);
+            if (File.Exists(SessionFileName))
+            {
+                string json = File.ReadAllText(SessionFileName);
+                return JsonConvert.DeserializeObject<WalletSession>(json);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            return new WalletSession(); // Or handle null case as needed
+            Console.WriteLine($"Error loading session: {ex.Message}");
         }
+
+        return new WalletSession(); // Or handle null case as needed
     }
 }
 
 public class WalletSession
 {
-    // Add properties to store relevant session information
     public string WalletAddress { get; set; }
     public string AccessToken { get; set; }
-    // Add other properties as needed
 
-    // Add constructors if necessary
     public WalletSession()
     {
-        // Initialize default values if needed
         WalletAddress = "";
         AccessToken = "";
     }
