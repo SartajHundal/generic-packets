@@ -2,43 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Nethereum.Web3;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Contracts;
-using System.Numerics;
+using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
-
-public class MyDbContext : DbContext
-{
-    public DbSet<Protocol> Protocols { get; set; }
-    public DbSet<Coin> Coins { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.UseSqlServer("your_connection_string");
-    }
-}
-
-public class Protocol
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public BigInteger Value { get; set; }
-    public int CoinId { get; set; }
-    public Coin Coin { get; set; }
-}
-
-public class Coin
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public string Symbol { get; set; }
-    public string Description { get; set; }
-}
-
-public class CoinMetadata
-{
-    public string Name { get; set; }
-    public string Symbol { get; set; }
-    public string Description { get; set; }
-}
 
 public class MyContractService
 {
@@ -73,11 +39,26 @@ public class MyContractService
 
     private async Task<BigInteger> GetValueFromSmartContract()
     {
-        // Code to retrieve value from smart contract using Nethereum
+        // Assuming the smart contract has a function named getProtocolValue(uint256)
+        var contractFunction = new Functions.GetProtocolValueFunction();
+        var result = await _web3.Eth.CallAsync<Functions.GetProtocolValueFunction>(contractFunction, "smart_contract_address", fromBlock: null, toBlock: null);
+        return result.Value;
     }
 
     private async Task<Coin> GetCoinMetadata()
     {
-        // Code to retrieve coin metadata from CoinGecko API
+        using (var httpClient = new HttpClient())
+        {
+            var response = await httpClient.GetAsync("https://api.coingecko.com/api/v3/coins/{coin_id}");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            var coinMetadataJson = JsonSerializer.Deserialize<CoinMetadata>(content);
+            return new Coin
+            {
+                Name = coinMetadataJson.Name,
+                Symbol = coinMetadataJson.Symbol,
+                Description = coinMetadataJson.Description
+            };
+        }
     }
 }
