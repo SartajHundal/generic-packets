@@ -1,9 +1,22 @@
 using System;
 using System.Security.Cryptography;
+using System.Text;
 
-public class AtomicSwap 
+public class AtomicSwap
 {
-    // Properties remain unchanged
+    public string SourceChainId { get; set; }
+    public string TargetChainId { get; set; }
+    public string SourceAssetId { get; set; }
+    public string TargetAssetId { get; set; }
+    public decimal SourceAmount { get; set; }
+    public decimal TargetAmount { get; set; }
+    public string SourceAddress { get; set; }
+    public string TargetAddress { get; set; }
+    public object CryptoPacket { get; set; } // Assuming CryptoPacket is of type object for flexibility
+
+    // Added properties
+    public string Secret { get; set; }
+    public string SecretHash { get; set; }
 
     public void InitiateSwap()
     {
@@ -13,7 +26,7 @@ public class AtomicSwap
         LockSourceAssets(SourceChainId, SourceAssetId, SourceAmount, SecretHash);
         ShareSecretHashWithTargetChain(TargetChainId, SecretHash);
     }
-    
+
     public void ClaimSwap()
     {
         UnlockTargetAssets(TargetChainId, TargetAssetId, TargetAmount, Secret);
@@ -27,7 +40,10 @@ public class AtomicSwap
         var random = new Random();
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         var result = new char[10];
-        random.NextChars(chars.Length, result);
+        for (int i = 0; i < result.Length; i++)
+        {
+            result[i] = chars[random.Next(chars.Length)];
+        }
         return new string(result);
     }
 
@@ -41,6 +57,7 @@ public class AtomicSwap
         }
     }
 
+    // Implementations of other methods remain unchanged...
     private void LockSourceAssets(string chainId, string assetId, decimal amount, string secretHash)
     {
         Console.WriteLine($"Locked {amount} units of {assetId} on chain {chainId} with secret hash {secretHash}");
