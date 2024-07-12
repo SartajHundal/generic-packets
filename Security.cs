@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 public class Security
 {
@@ -50,18 +51,31 @@ public class Security
         // In a real-world scenario, you would implement logic to determine the owner.
         return "OwnerAddress";
     }
-}
 
-public class TransferEventArgs : EventArgs
-{
-    public string From { get; }
-    public string To { get; }
-    public uint Value { get; }
-
-    public TransferEventArgs(string from, string to, uint value)
+    // New method to simulate price fluctuations based on demand and supply
+    public void SimulatePriceFluctuation()
     {
-        From = from;
-        To = to;
-        Value = value;
+        // Example: Increase price by 5% if demand is high, decrease by 5% if supply is high
+        // This is a simplified example. Actual implementation would depend on specific criteria.
+        double newPrice = TotalSupply > 10000 ? TotalSupply * 0.95 : TotalSupply * 1.05;
+        Description = $"Current Price: {newPrice}";
+    }
+
+    // New method to adjust total supply based on economic policies
+    public void AdjustTotalSupplyBasedOnEconomicPolicies()
+    {
+        // Example: Reduce total supply by 10% to simulate an economic policy aimed at controlling inflation
+        TotalSupply = (uint)(TotalSupply * 0.9);
+    }
+
+    // New method to update balances based on trading volume
+    public void UpdateBalancesBasedOnTradingVolume()
+    {
+        // Example: Distribute 1% of total supply equally among all current holders to simulate trading volume effects
+        uint distributionAmount = (uint)(TotalSupply * 0.01);
+        foreach (var holder in BalanceOf.Keys.ToList())
+        {
+            BalanceOf[holder] += distributionAmount / BalanceOf.Count;
+        }
     }
 }
