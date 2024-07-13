@@ -2,9 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Nethereum.Web3;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Contracts;
-using System.Net.Http;
-using System.Text.Json;
+using Nethereum.Web3.Accounts;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 public class MyContractService
 {
@@ -19,10 +21,8 @@ public class MyContractService
 
     public async Task MapProtocolWithCoinMetadata()
     {
-        // Retrieve protocol data from smart contract
+        // Simulate protocol data from smart contract
         var protocolValue = await GetValueFromSmartContract();
-
-        // Retrieve coin metadata from API
         var coinMetadata = await GetCoinMetadata();
 
         // Map protocol data with coin metadata
@@ -60,5 +60,44 @@ public class MyContractService
                 Description = coinMetadataJson.Description
             };
         }
+    }
+
+    // New method to simulate protocol values based on procedural generation
+    private BigInteger SimulateProtocolValue()
+    {
+        // Example: Generate a random protocol value for simulation purposes
+        var random = new Random();
+        return new BigInteger(random.Next(1, int.MaxValue));
+    }
+
+    // New method to simulate market dynamics affecting coin metadata
+    private Coin SimulateCoinMetadata(Coin originalMetadata)
+    {
+        // Example: Adjust coin metadata based on simulated market conditions
+        var simulatedMetadata = new Coin
+        {
+            Name = originalMetadata.Name,
+            Symbol = originalMetadata.Symbol,
+            Description = originalMetadata.Description + " (Simulated)"
+        };
+
+        // Apply market dynamics simulation here, e.g., adjusting description to indicate simulation
+        return simulatedMetadata;
+    }
+
+    // Modified MapProtocolWithCoinMetadata to include simulation options
+    public async Task MapProtocolWithCoinMetadata(bool simulateValues = false)
+    {
+        BigInteger protocolValue = simulateValues ? SimulateProtocolValue() : await GetValueFromSmartContract();
+        var coinMetadata = simulateValues ? SimulateCoinMetadata(await GetCoinMetadata()) : await GetCoinMetadata();
+
+        var protocol = new Protocol
+        {
+            Value = protocolValue,
+            Coin = coinMetadata
+        };
+
+        _dbContext.Protocols.Add(protocol);
+        await _dbContext.SaveChangesAsync();
     }
 }
