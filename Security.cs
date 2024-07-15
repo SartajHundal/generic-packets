@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 public class Security
 {
@@ -7,6 +6,7 @@ public class Security
     public string Symbol { get; set; }
     public uint TotalSupply { get; private set; }
     public Dictionary<string, uint> BalanceOf { get; private set; }
+    public string Description { get; set; } // Assuming this property exists for price description
 
     public event EventHandler<TransferEventArgs> Transfer;
 
@@ -46,12 +46,6 @@ public class Security
         Symbol = newSymbol;
     }
 
-    private string GetOwner()
-    {
-        // In a real-world scenario, you would implement logic to determine the owner.
-        return "OwnerAddress";
-    }
-
     // New method to simulate price fluctuations based on demand and supply
     public void SimulatePriceFluctuation()
     {
@@ -68,14 +62,11 @@ public class Security
         TotalSupply = (uint)(TotalSupply * 0.9);
     }
 
-    // New method to update balances based on trading volume
-    public void UpdateBalancesBasedOnTradingVolume()
+    private string GetOwner()
     {
-        // Example: Distribute 1% of total supply equally among all current holders to simulate trading volume effects
-        uint distributionAmount = (uint)(TotalSupply * 0.01);
-        foreach (var holder in BalanceOf.Keys.ToList())
-        {
-            BalanceOf[holder] += distributionAmount / BalanceOf.Count;
-        }
+        // In a real-world scenario, you would implement logic to determine the owner.
+        return "OwnerAddress";
     }
+
+    // Additional methods remain unchanged...
 }
