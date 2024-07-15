@@ -19,11 +19,11 @@ public class MyContractService
         _dbContext = new MyDbContext();
     }
 
-    public async Task MapProtocolWithCoinMetadata()
+    public async Task MapProtocolWithCoinMetadata(bool simulateValues = false)
     {
-        // Simulate protocol data from smart contract
-        var protocolValue = await GetValueFromSmartContract();
-        var coinMetadata = await GetCoinMetadata();
+        // Determine whether to use simulated or real data based on the simulateValues flag
+        BigInteger protocolValue = simulateValues ? SimulateProtocolValue() : await GetValueFromSmartContract();
+        var coinMetadata = simulateValues ? SimulateCoinMetadata(await GetCoinMetadata()) : await GetCoinMetadata();
 
         // Map protocol data with coin metadata
         var protocol = new Protocol
@@ -35,6 +35,29 @@ public class MyContractService
         // Save to database
         _dbContext.Protocols.Add(protocol);
         await _dbContext.SaveChangesAsync();
+    }
+
+    // Method to simulate protocol values based on procedural generation
+    private BigInteger SimulateProtocolValue()
+    {
+        // Example: Generate a random protocol value for simulation purposes
+        var random = new Random();
+        return new BigInteger(random.Next(1, int.MaxValue));
+    }
+
+    // Method to simulate coin metadata based on procedural generation
+    private Coin SimulateCoinMetadata(Coin originalMetadata)
+    {
+        // Example: Adjust coin metadata based on simulated market conditions
+        var simulatedMetadata = new Coin
+        {
+            Name = originalMetadata.Name,
+            Symbol = originalMetadata.Symbol,
+            Description = originalMetadata.Description + " (Simulated)"
+        };
+
+        // Apply market dynamics simulation here, e.g., adjusting description to indicate simulation
+        return simulatedMetadata;
     }
 
     private async Task<BigInteger> GetValueFromSmartContract()
