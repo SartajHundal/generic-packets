@@ -43,7 +43,19 @@ public class TokenTransferService
             var account = new Account(senderPrivateKey);
             var transferFunction = new TransferFunction { To = receiverAddress, AmountToSend = tokens };
             var transferHandler = _web3.Eth.GetContractTransactionHandler<TransferFunction>();
-            var transactionHash = await transferHandler.SendRequestAndWaitForReceiptAsync(contractAddress, transferFunction, account.Address);
+        
+            // Consider specifying gas price and gas limit for optimization
+            var transactionInput = new TransactionInput
+            {
+                From = account.Address,
+                To = contractAddress,
+                GasPrice = Web3.Convert.ToWei(20, UnitConversion.EthUnit.Gwei), // Example: 20 Gwei
+                Gas = 21000, // Standard gas limit for a simple transfer
+                Value = 0, // No Ether transfer, only tokens
+                Data = transferFunction.GetData()
+            };
+        
+            var transactionHash = await transferHandler.SendTransactionAsync(transactionInput);
             return transactionHash;
         }
         catch (Exception ex)
@@ -60,33 +72,39 @@ public class TokenTransferService
     /// <returns>The transaction hash of the transaction with the lowest gas fees.</returns>
     public async Task<string> FindTransactionWithLowestFeesAsync(string[] transactionHashes)
     {
+        if (transactionHashes == null || transactionHashes.Length == 0)
+        {
+            throw new ArgumentException("Transaction hashes cannot be null or empty.", nameof(transactionHashes));
+        }
+
         try
         {
-            var lowestFeeTransactionHash = "";
-
+            var tasks = transactionHashes.Select(hash => _web3.Eth.Transactions.GetTransactionByHash.SendRequestAsync(hash)).ToArray();
+            var transactions = await Task.WhenAll(tasks);
+        
             decimal lowestFee = decimal.MaxValue;
+            string lowestFeeTransactionHash = null;
 
-            foreach (var hash in transactionHashes)
+            foreach (var transaction in transactions)
             {
-                var transaction = await _web3.Eth.Transactions.GetTransactionByHash.SendRequestAsync(hash);
-                var gasPrice = Web3.Convert.FromWei(transaction.GasPrice.Value);
-
+                var gasPrice = Web3.Convert.FromWei(transaction.GasPrice.Value, UnitConversion.EthUnit.Ether);
+            
                 if (gasPrice < lowestFee)
                 {
                     lowestFee = gasPrice;
-                    lowestFeeTransactionHash = hash;
+                    lowestFeeTransactionHash = transaction.Hash;
                 }
             }
-
-            return lowestFeeTransactionHash;
+        
+            return lowestFeeTransactionHash ?? throw new InvalidOperationException("No valid transactions found.");
         }
         catch (Exception ex)
-        {
+            {
             Console.WriteLine($"Error finding transaction with lowest fees: {ex.Message}");
-            return null;
+            return null; // Consider a more robust error handling strategy
+            }
         }
     }
-}
 
 /// <summary>
 /// Represents a function message for token transfers.
